@@ -70,7 +70,7 @@ Don't create a new image each time: your work lives in that image. Save it from 
 Use this if the download in step 3 above fails, or if you don't see **Smic (Compiler Course)** in the list.
 
 1. Download the zip (about 130 MB):
-   https://rmod-files.lille.inria.fr/?file=Lectures/Compiler-Course/CompilerCourse-v1.0.3.zip
+   https://rmod-files.lille.inria.fr/Lectures/Compiler-Course/CompilerCourse-v1.0.3.zip
 
 2. Unzip it. You get a folder called `CompilerCourse`.
    **Keep that folder together.** The `.image` file needs the files next to it (`.changes`, `.sources`, the `libunicorn…` and `libLLVM…` libraries). Don't move the `.image` file out on its own.
