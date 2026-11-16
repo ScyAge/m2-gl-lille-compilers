@@ -64,7 +64,7 @@ jobs:
         include:
           # Oldest supported Ubuntu, so the library runs on older glibc too
           - { platform: linux-x86_64, os: ubuntu-22.04 }
-          - { platform: macos-arm64, os: macos-14 }
+          - { platform: macos-arm64, os: macos-15 }
           - { platform: windows-x86_64, os: windows-latest }
     runs-on: ${{ matrix.os }}
     defaults:
@@ -125,7 +125,7 @@ jobs:
       matrix:
         include:
           - { platform: linux-x86_64, os: ubuntu-22.04 }
-          - { platform: macos-arm64, os: macos-14 }
+          - { platform: macos-arm64, os: macos-15 }
           - { platform: windows-x86_64, os: windows-latest }
     runs-on: ${{ matrix.os }}
     defaults:
