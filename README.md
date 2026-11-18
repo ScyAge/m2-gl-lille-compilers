@@ -197,3 +197,8 @@ Discord is the communication channel to find admin info, discuss topics, and ask
 - One channel per topic
 
 Join: https://discord.gg/fMqFeAgTV
+
+# Some Links
+
+Questions sur Pharo: https://mooc.pharo.org/
+Advanced Design Mooc: https://advanced-design-mooc.pharo.org/
