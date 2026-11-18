@@ -13,10 +13,10 @@ The grammar is written in a notation similar to **BNF (Backus–Naur Form)**. Ea
 For example:
 
 ```text
-BinaryMessage ::= UnaryMessage BinaryMessagePart*
+Assignment ::= Variable ':=' Expression
 ```
 
-This means that a `BinaryMessage` consists of one `UnaryMessage`, followed by **zero or more** `BinaryMessagePart`s.
+This means that an `Assignment` consists of a `Variable`, followed by the token `:=`, followed by an `Expression`.
 
 The notation used in this grammar is:
 
@@ -33,94 +33,97 @@ A ::= B | C
 means that `A` can be either `B` or `C`.
 
 ```text
-A*
-```
-
-means **zero or more** occurrences of `A`.
-
-```text
 A+
 ```
 
 means **one or more** occurrences of `A`.
 
-Parentheses group elements together. For example:
-
 ```text
-Sequence ::= Statement (';' Statement)*
+A?
 ```
 
-means that a `Sequence` contains one `Statement`, optionally followed by any number of additional statements, each preceded by `;`.
+means that `A` is **optional**.
 
-Names such as `Expression`, `Statement`, and `BinaryMessage` refer to other grammar rules. Literal symbols such as `;`, `(`, `)`, and `:=` refer directly to those tokens in the source program.
+Parentheses group elements together. For example, `(KeywordPart Binary)+` means one or more pairs of a `KeywordPart` followed by a `Binary`.
+
+Names such as `Expression` and `Binary` refer to other grammar rules. Symbols in quotes such as `':='`, `'('` and `'['` refer directly to those tokens in the source program.
+
+Some rules refer to themselves. For example:
+
+```text
+Unary ::= Unary UnarySelector
+        | Primary
+```
+
+means that a `Unary` is either a `Primary`, or a smaller `Unary` followed by one more selector. So `3 factorial factorial` is the unary `3 factorial`, followed by `factorial`.
 
 ## Grammar
 
 The following grammar describes the subset of Pharo used in these exercises.
+It has one rule per precedence level, from the lowest to the highest priority:
+assignment, then keyword messages, then binary messages, then unary messages, then primaries.
 
 ```text
-Program       ::= Expression
+Expression ::= Assignment
+             | Keyword
 
-Expression    ::= MessageExpression | AssignmentExpression
+Assignment ::= Variable ':=' Expression
 
-AssignmentExpression ::= Variable ':=' Expression
+Keyword    ::= Binary (KeywordPart Binary)+
+             | Binary
 
-MessageExpression
-              ::= KeywordMessage
-                | BinaryMessage
+Binary     ::= Binary BinarySelector Unary
+             | Unary
 
-KeywordMessage
-              ::= BinaryMessage KeywordMessagePart+
-KeywordMessagePart
-              ::= Keyword BinaryMessage
+Unary      ::= Unary UnarySelector
+             | Primary
 
-BinaryMessage ::= UnaryMessage BinaryMessagePart*
-BinaryMessagePart
-              ::= BinarySelector UnaryMessage
+Primary    ::= Variable
+             | Literal
+             | Block
+             | '(' Expression ')'
 
-UnaryMessage  ::= Primary UnaryMessagePart*
-UnaryMessagePart
-              ::= UnarySelector
-
-Primary       ::= Variable
-                | Literal
-                | Block
-                | '(' Expression ')'
-
-Block         ::= '[' BlockArguments? '|' Sequence? ']'
-
-BlockArguments
-              ::= BlockArgument+
+Block      ::= '[' (BlockArgument+ '|')? Expression? ']'
 
 BlockArgument ::= ':' Variable
 
-Literal       ::= Integer
-                | String
-                | true
-                | false
-                | nil
+Literal    ::= Integer | String | 'true' | 'false' | 'nil'
+```
 
-Variable      ::= identifier
+The tokens are:
 
-Keyword       ::= identifier ':'
-UnarySelector  ::= identifier
+```text
+Variable       ::= identifier            e.g. answer, x
+UnarySelector  ::= identifier            e.g. factorial, size
+KeywordPart    ::= identifier ':'        e.g. at:, put:
 BinarySelector ::= '+' | '-' | '*' | '/' | '=' | '<' | '>' | '<=' | '>='
 ```
 
-For this worksheet, assume the grammar above generates AST nodes with names:
+Each rule says what each precedence level is made of:
 
-```text
-Assignment
-Message
-Variable
-Integer
-String
-Boolean
-Nil
-Block
-```
+* the receiver of a unary message is a primary or another unary message;
+* the receiver and argument of a binary message are unary messages, and the receiver can also be another binary message;
+* the receiver and arguments of a keyword message are binary messages;
+* parentheses start again from `Expression`, which is the only way to put a lower-priority expression inside a higher-priority one.
 
-For message nodes, even though the grammar supports different kinds, assume they all generate the same kind of AST nodes following this structure. I.e., a message node contains the node representing the receiver, the selector, and a list of arguments, which may be an empty list.
+## AST Nodes
+
+Each grammar rule builds one AST node:
+
+| Rule                                   | AST node                                     |
+|----------------------------------------|----------------------------------------------|
+| `Assignment`                           | `Assignment(variable, value)`                |
+| `Keyword` with keyword parts           | `Message(receiver, selector, arguments)`     |
+| `Binary` with a selector               | `Message(receiver, selector, [argument])`    |
+| `Unary` with a selector                | `Message(receiver, selector, [])`            |
+| `Block`                                | `Block(arguments, body)`                     |
+| `Variable`                             | `Variable(name)`                             |
+| `Integer`, `String`                    | `Integer(value)`, `String(value)`            |
+| `true`, `false`, `nil`                 | `Boolean(value)`, `Nil`                      |
+
+The alternatives `Keyword ::= Binary`, `Binary ::= Unary`, `Unary ::= Primary` and `Primary ::= '(' Expression ')'` build no node of their own: they return the node of the inner rule.
+
+All three kinds of messages build the same `Message` node:
 
 ```text
 Message
@@ -129,8 +132,7 @@ Message
     arguments
 ```
 
-For example, a `KeywordMessage` with a selector such as `at:put:` is represented by one selector with two arguments.
-
+For example, `array at: 3 put: 42` builds one message with selector `at:put:` and two arguments.
 
 ## Exercise 1 — Literals
 
