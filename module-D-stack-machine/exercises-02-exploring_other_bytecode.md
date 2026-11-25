@@ -111,11 +111,11 @@ Identify:
 You should be able to identify instructions corresponding to operations such as:
 
 ```text
-load
-constant
-add
-multiply
-return
+load : ajoute sur la pile les arguments de la fonction
+constant : ajoute sur la pile les constante
+add : fait l'addition des dernière valeurs présente sur la pile
+multiply : fait la multiplication des dernière valeurs présente sur la pile
+return : renvoie le resultat stocké sur la pile
 ```
 
 Do not worry if the exact instruction names are unfamiliar at first.
@@ -168,10 +168,10 @@ Construct a table:
 
 | Abstract machine | JVM |
 | ---------------- | --- |
-| `PUSH 2`         | ?   |
-| `ADD`            | ?   |
-| `MUL`            | ?   |
-| return           | ?   |
+| `PUSH 2`         | iconst_2   |
+| `ADD`            | iadd   |
+| `MUL`            | imul   |
+| return           | ireturn   |
 
 ---
 
@@ -181,6 +181,12 @@ You will probably notice that the JVM does not have just one instruction for pus
 
 Investigate the JVM instructions used for integer constants with different values: 0, 9, 100, 9999.
 
+0 est une constante iconst_0
+
+9 on bipush        9
+100 bipush        100
+9999 sipush        9999
+
 Why might a real VM provide several different instructions for loading constants instead of having only:
 
 ```text
@@ -188,6 +194,8 @@ PUSH k
 ```
 
 ?
+
+Car ça dépend de la taille de l'entier utilisé 
 
 ---
 
@@ -198,10 +206,24 @@ Consult the **official JVM specification** and verify the stack behavior of at l
 For each instruction, record:
 
 ```text
-Instruction:
-Stack before:
-Stack after:
-Purpose:
+Instruction: imul 
+Stack before: [5,5]
+Stack after: [25]
+Purpose:on depile les deux valeur, on fait la multiplication puis on pousse le resultat sur la pile
+```
+
+```text
+Instruction: iretunr 
+Stack before: [25]
+Stack after: []
+Purpose:on depile la dernière valeur présente sur la pile et on la renvoie
+```
+
+```text
+Instruction: iadd 
+Stack before: [5,5]
+Stack after: [10]
+Purpose:on depile les deux valeure puis on fait l'addition, on pousse le resultat sur la pile
 ```
 
 ---
@@ -236,11 +258,11 @@ else
 
 Identify:
 
-* the comparison;
-* the conditional branch;
-* the two branches;
-* the return instructions;
-* any unconditional jumps.
+* the comparison; ifge          7
+* the conditional branch; line 4 -> 6 dans le bytecode
+* the two branches; 4 -> 6 branche 1 / 7 -> 8 la deuxième
+* the return instructions; line 6 et 8
+* any unconditional jumps. ireturn : resume la fonction donc on execute pas le reste des intsruction
 
 Draw a simplified control-flow graph.
 
@@ -265,17 +287,25 @@ Trace the operand stack for:
 ```text
 x = -5
 ```
-
+```text 
+_ -> iload_0 -> ineg -> return
+[] -> [x] -> [-x] -> []
+```
 and then for:
 
 ```text
 x = 5
 ```
 
+```text 
+_ -> iload_0 -> return 
+[] -> [x] -> []
+```
+
 At each branch instruction, answer:
 
 > What is on top of the operand stack when the branch is evaluated?
-
+l'entier
 ---
 
 ## 2.3 Stack consistency at control-flow joins
@@ -307,6 +337,10 @@ while another reached it with:
 ```
 
 Write a short explanation.
+
+```text
+Dans un cas ou des opérations sont effectué après l'execution des branch si la pile est vide les opération ne pourront pas être executé
+```
 
 ---
 
@@ -353,15 +387,42 @@ Using the official JVM specification, determine:
 Record your answer as:
 
 ```text
-Instruction:
-Purpose:
+Instruction:new
+Purpose: crée un nouvel objet  liée a l'identifiant que l'on a a coté 
 
-Stack before:
-Stack after:
+Stack before: []
+Stack after: [objectref]
 
-Why is it needed?
+Why is it needed? pour la creatoind d'objet
 ```
 
+```text
+Instruction: dup
+Purpose: dublique le contenue en haut de la pile
+
+Stack before: [v]
+Stack after: [v,v]
+
+Why is it needed? pour faire certaine opération qui on besoin de fois la même valeur
+```
+```text
+Instruction: invokespecial
+Purpose: permet de faire des appel de méthode sur des objets
+
+Stack before: [obj, args ...]
+Stack after: [result]
+
+Why is it needed? pour faire executé du code spécifique a un objet donnée
+```
+```text
+Instruction: areturn
+Purpose:renvoie une ref depuis une méthode
+
+Stack before: [obj]
+Stack after: []
+
+Why is it needed? jsp
+```
 ---
 
 # Exercise 3 — Java vs Kotlin: Same JVM, Different Compilation
@@ -406,20 +467,22 @@ Create a comparison table:
 
 | Question           | Java | Kotlin |
 | ------------------ | ---- | ------ |
-| How is `x` loaded? |      |        |
-| How is `y` loaded? |      |        |
-| How is `2` loaded? |      |        |
-| Addition           |      |        |
-| Multiplication     |      |        |
-| Return             |      |        |
+| How is `x` loaded? |   iload_0   |    iload_0    |
+| How is `y` loaded? |   iload_1   |    iload_1    |
+| How is `2` loaded? |   iconst_2   |    iconst_2    |
+| Addition           |   iadd   |    iadd    |
+| Multiplication     |   imul   |    imul    |
+| Return             |   ireturn   |    ireturn    |
 
-Then answer:
+Then answer: 
 
 > Are the generated bytecodes identical?
 
-If not:
+If not: 
 
 > Which parts are different?
+
+le code de la méthode est le même, la seule différence et l'introduction de LocalVariableTable
 
 ---
 
@@ -443,7 +506,7 @@ For example, does the stack evolve conceptually as:
 [..., (x + 2) * y]
 ```
 
-?
+Les deux langages utilise la même JVM et donc les même instruction utilisé dans le même ordre donc en théorie, les deux utilise le même ordre d'évalutation
 
 ---
 
@@ -478,6 +541,16 @@ Answer:
 4. Which instructions perform the comparison?
 5. How are the two possible values selected?
 
+```text 
+ 1 -> non il n'ont pas la même structure
+ java -> utilise l'oppérateur ternaie
+ kotlin -> utilise simplement un if else
+ 2 -> non aucune différence
+ 3 -> if_icmple -> si vrai continue et jump au return (10) -> si faux jump au 9  
+ 4 ->  if_icmple
+ 5 -> selon le resulatt de la comparaison soit il va continuer a executer les instruction a la usite soit il va jump vers la ligne spécifier en paramèntre
+```
+
 ---
 
 ## 3.5 Compiler or language?
@@ -498,6 +571,8 @@ D. JVM bytecode directly represents the source language.
 ```
 
 Choose the best answer and explain it.
+
+Je dirais la C. Si on veut que sa complie pour la jvm on doit dans tout les cas respecter le jeux d'instruction de celle ci, mais on comme on peut le voir les deux méthode on était compiler de la même manière mais kotlin intègre en plus le LocalVariableTable, qui doit être un choix des dev
 
 ---
 
