@@ -136,6 +136,7 @@ The second and third commands download and unzip the Pharo 13 VM. You only need 
 
 - **macOS says "Pharo Launcher can't be opened"**: right-click the app → **Open** → **Open**. You only have to do this once.
 - **Windows says "Windows protected your PC"**: click **More info** → **Run anyway**.
+- **I'm on Windows and the DLLs are not there! I have a "symbol/library not found error" with llvm or unicorn**: Probably you have an old launcher! Update it, and redownload the image. Another alternative is to load the zip in the link above (Option B) and copy the dlls next to your image.
 - **Still stuck?** Ask on Discord. Say which option you tried, your operating system, and paste the error message or a screenshot.
 
 ## Rough Agenda (1st part — can/may deviate)
@@ -158,6 +159,12 @@ The second and third commands download and unzip the Pharo 13 VM. You only need 
 
 ## Evaluation
 
+Because of outside reasons, we change the evaluation!
+Only CT (Contrôl terminale), written exam at the end.
+Rattrapage oral if needed!
+
+The original evaluation was as this:
+
 ```
 CC * 0.5 + DS1 * 0.25 + DS2 * 0.25
 ```
@@ -165,6 +172,9 @@ CC * 0.5 + DS1 * 0.25 + DS2 * 0.25
 Strong focus on practice and presence. Special circumstances are taken into account.
 
 ### Continuous Control (CC)
+
+Because of outside reasons, we change the evaluation!
+We do not do CC this year!
 
 - Lots of practical exercises: coding, but not only
 - Also exploring, understanding, explaining, drawing…
@@ -174,9 +184,12 @@ Strong focus on practice and presence. Special circumstances are taken into acco
 
 ### Exams (DS1, DS2)
 
+Because of outside reasons, we change the evaluation!
+We only do a single DS, at the end of the last period -- estimated 08/02.
+
 - Written on paper
 - Exercises similar to the practice sessions — very easy if you do the practices
-- One at the end of the first period (estimated 16/12)
+- One at the end of the first period (estimated 16/12) -- **NOT ANYMORE**
 - One at the end of the last period (estimated 08/02)
 
 ## AI Policy
