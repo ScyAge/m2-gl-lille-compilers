@@ -59,9 +59,9 @@ Create a table:
 
 |                        | x86-64 | ARM64 | RISC-V |
 | ---------------------- | ------ | ----- | ------ |
-| Instruction(s)         |        |       |        |
-| Return-value register  |        |       |        |
-| Number of instructions |        |       |        |
+| Instruction(s)         | mov eax,42   mov  |  w0, 42      |    li      a5,42    |
+| Return-value register  |   eax     |   w0    |   a0     |
+| Number of instructions |    5    |    2   |   10     |
 
 ---
 
@@ -75,6 +75,10 @@ int get_value(void)
     return 1000;
 }
 ```
+```
+pas de différence, ce sont les même instructiont jsute 42 est remplacer par 1000
+```
+
 
 Then try:
 
@@ -84,12 +88,25 @@ int get_value(void)
     return 100000;
 }
 ```
+```
+différence pour arm64 qui insère en deux partie 100000 dans w0  en faisant un shit a gauche tout en ne touchant pas les bit de droit
+
+différence pour risc-v qui ajoute d'abord 98304 dans a5 puis ajoute 1696 pour obtenir 100000
+```
+
 
 ### Questions
 
 1. Does the generated code change?
 2. Can every ISA encode an arbitrary integer constant directly in one instruction?
 3. If not, what does the compiler do?
+
+
+```
+ 1 : yes
+ 2 : no 
+ 3: il desassemble les constantes en des constenste de plus petite taille puis il construit la constante principale
+```
 
 This introduces an important ISA concept:
 
@@ -118,7 +135,42 @@ Identify:
 * the instruction performing the addition;
 * the register containing the result.
 
+```
+x86
+  1
+  - edx : a
+  - eax  : b 
+
+  2
+  - add     eax, edx
+  3
+  - eax
+
+ARM
+  - w0 : a
+  - w1  : b 
+
+  2
+  - add     w0, w1, w0
+  3
+  - w0 
+
+Risc-v
+  - a0  et a4: a
+  - a1  et a5 : b 
+
+  2
+  - add  a5,a4,a5
+  3
+  - a0
+
+
+```
+
+
 Then consider:
+
+
 
 ```c
 int subtract(int a, int b)
@@ -131,12 +183,20 @@ Compare the two programs.
 
 ### Questions
 
-1. What instruction performs addition?
+1. What instruction performs addition? 
 2. What instruction performs subtraction?
 3. How many operands does each instruction have?
 4. Is the destination register also one of the input registers?
 5. Do all three ISAs use the same operand structure?
 
+
+```
+1 : add 
+2 : sub 
+3 : 2 or 3
+4 : dedend de l'archi on peut spécifier a autre registre de renvoie en arm et risc
+5 : no
+```
 ---
 
 ## Three operands or two?
@@ -154,6 +214,13 @@ destination = destination + source
 ```
 
 Determine which model is used by each architecture.
+
+
+```
+x86 model 2
+
+arm et risc model 1
+```
 
 This is an important ISA-level difference.
 
@@ -181,10 +248,17 @@ int calculate(int a, int b)
 
 ### Questions
 
-1. How many arithmetic instructions are generated?
+1. How many arithmetic instructions are generated? 
 2. Which intermediate values are kept in registers?
 3. Does each architecture use the same number of registers?
 4. Does the instruction syntax make the data flow easy or difficult to see?
+
+```
+1 : 2
+2 : le resultat de la première opération
+3 : non arm et x86 en utilise 2 et risc-v 3
+4 : preaty esay for arm ands x86
+```
 
 Try to reconstruct the computation from the assembly.
 
@@ -219,6 +293,14 @@ Compare x86-64, ARM64, and RISC-V.
 4. Does multiplication have the same instruction structure as addition?
 5. Are there any important differences between the architectures?
 
+```
+1 : yes 
+2 : x86 : 2 ,arm : 3 ,risc : 3
+3 : x86 : premier arg ,  arm : premier arg , risc : premier arg
+4 : x86 : oui, arm : oui, risc: oui
+5 : no
+```
+
 Now try:
 
 ```c
@@ -241,9 +323,15 @@ int multiply_by_ten(int x)
 
 Look at the generated instructions.
 
-1. How is the constant represented?
+1. How is the constant represented? 
 2. Is multiplication by a constant treated differently?
 3. Does the ISA provide any special instruction that makes this convenient?
+
+```
+1 : les constante ne sont pas vraiment représenté clairement
+2 : oui, le compilateur fait des decalage ou bien pour les multipliaction par 2 faait deux fois l'addition de la même valeur
+3 : non
+```
 
 Do not try to explain the compiler's choice in terms of optimization.
 
@@ -274,6 +362,14 @@ Compare the three architectures.
 4. Where is the quotient placed?
 5. Is division structurally similar to multiplication?
 
+```
+1 : oui
+2 : idiv, sdiv, div (x86,arm,risc)
+3 : 1 ,3,3
+4 : eax, w0,a0
+5 : oui mais pas pour x86
+```
+
 Now try:
 
 ```c
@@ -284,7 +380,10 @@ int divide_by_two(int x)
 ```
 
 Compare the generated code.
+```
 
+il fait la même chose que la mult avec constante
+```
 ---
 
 ## Signed versus unsigned division
@@ -312,6 +411,15 @@ unsigned int divide(unsigned int a, unsigned int b)
 1. Does the generated assembly differ?
 2. Does the ISA distinguish signed and unsigned division?
 3. If so, how?
+
+```
+1 : cui
+2 : oui
+3 : 
+
+x86, n'utilise pas la même instruction de divison et rajoute des instruction
+arm et risc, utilise juste une intruction différente
+```
 
 This is a good example of the interaction between:
 
@@ -353,6 +461,14 @@ int always_false(void)
 2. How does each ISA return these values?
 3. Are there special Boolean registers?
 4. Or are Boolean values ordinary integer values?
+
+
+```
+1 : 1 or 0
+2 : en renvoyent 1 ou 0
+3 : non
+4 : oui
+```
 
 ---
 
@@ -397,6 +513,15 @@ Pay particular attention to the **comparison mechanism**.
 4. How does the result become the C value `0` or `1`?
 5. Is the mechanism the same on x86-64, ARM64, and RISC-V?
 
+
+```
+1 : non, non, oui (x86,arm,risc)
+2 : oui, ouii ,non
+3 : cmp, cmp, (seqz,slt,sgt)
+4 : pour x86 et arm c'est l'instruction d'après, pour risc c'est la compariason qui crée direcmetn la valeur
+5: non
+```
+
 ---
 
 ## Important comparison
@@ -410,7 +535,19 @@ return a < b;
 ```
 
 Try to describe the three implementations at a conceptual level.
+```
+x86 : 
+l'instruction après la comparison vérfier le flag mis après la comparaison et renvor 1 ou 0
 
+arm : 
+ regarde le flag et la compare avec le flag de comparison correspondant si les flag sont identique alors il renvoi 1 sinon 0 
+
+risc-v :
+
+il n'y a pas de flag il y juste une instruction qui donne diremctenm le resultat
+
+
+```
 For example:
 
 ```text
@@ -423,6 +560,12 @@ C:
 ```
 
 Then describe what happens on each ISA.
+
+
+```
+arm et x86 modifier un flag qu'un autre instruction utilise
+risc-v a une instruction qui produit direcmetenl la valeur booléeeene
+```
 
 Pay special attention to the difference between:
 
